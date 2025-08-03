@@ -20,6 +20,9 @@ def getWPOT(x):
 @wp_api.route("/wp", methods=['POST'])
 def wp():
     df = pd.DataFrame.from_records(json.loads(request.data))
+    for feature in df[features]:
+        df[feature] = pd.to_numeric(df[feature], errors='coerce')
+    
     df['o_win_prob'] = df[features].apply(getWP, axis=1)
     df['win_prob'] = np.where(df['home'] == df['offense'], df['o_win_prob'], 1 - df['o_win_prob'])
     ret = df.to_json(orient='table')
@@ -29,6 +32,8 @@ def wp():
 @wp_api.route("/wp/ot", methods=['POST'])
 def wp_ot():
     df = pd.DataFrame.from_records(json.loads(request.data))
+    for feature in df[features]:
+        df[feature] = pd.to_numeric(df[feature], errors='coerce')
     
     def is_first(x):
         if df.query("id == {0} and period == {1}".format(x.id, x.period)).sort_values(['drive_number', 'play_number']).iloc[0].offense == x.offense:
